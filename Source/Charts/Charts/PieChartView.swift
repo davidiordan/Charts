@@ -41,6 +41,15 @@ open class PieChartView: PieRadarChartViewBase
     
     /// Sets the font the entry labels are drawn with.
     private var _entryLabelFont: NSUIFont? = NSUIFont(name: "HelveticaNeue", size: 13.0)
+
+    /// if true, a border will be drawn around the entire pie chart
+    private var _drawBorderEnabled = false
+
+    /// the color used to outline the pie chart
+    private var _borderColor: NSUIColor? = NSUIColor.black
+
+    /// the width of the border from the outer and inner portions of the chart
+    private var _borderWidth: CGFloat = CGFloat(6.0)
     
     /// if true, the hole will see-through to the inner tips of the slices
     private var _drawSlicesUnderHoleEnabled = false
@@ -101,10 +110,12 @@ open class PieChartView: PieRadarChartViewBase
         }
         
         let optionalContext = NSUIGraphicsGetCurrentContext()
-        guard let context = optionalContext, let renderer = renderer else
+        guard let context = optionalContext, let renderer = renderer as? PieChartRenderer else
         {
             return
         }
+
+        renderer.drawBorder(context: context)
         
         renderer.drawData(context: context)
         
@@ -114,8 +125,9 @@ open class PieChartView: PieRadarChartViewBase
         }
         
         renderer.drawExtras(context: context)
-        
+
         renderer.drawValues(context: context)
+
         
         legendRenderer.renderLegend(context: context)
         
@@ -352,6 +364,43 @@ open class PieChartView: PieRadarChartViewBase
         set
         {
             _holeColor = newValue
+            setNeedsDisplay()
+        }
+    }
+
+    /// if true, a border will be drawn around the entire pie chart
+    ///
+    /// **default**: `false`
+    @objc open var drawBorderEnabled: Bool {
+        get
+        {
+            return _drawBorderEnabled
+        }
+        set {
+            _drawBorderEnabled = newValue
+            setNeedsDisplay()
+        }
+    }
+
+    @objc open var borderColor: NSUIColor? {
+        get
+        {
+            return _borderColor
+        }
+        set {
+            _borderColor = newValue
+            setNeedsDisplay()
+        }
+    }
+
+    @objc open var borderWidth: CGFloat {
+        get
+        {
+            return _borderWidth
+        }
+        set
+        {
+            _borderWidth = newValue
             setNeedsDisplay()
         }
     }
