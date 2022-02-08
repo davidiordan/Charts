@@ -110,12 +110,12 @@ open class PieChartView: PieRadarChartViewBase
         }
         
         let optionalContext = NSUIGraphicsGetCurrentContext()
-        guard let context = optionalContext, let renderer = renderer as? PieChartRenderer else
+        guard let context = optionalContext, let renderer = renderer else
         {
             return
         }
 
-        renderer.drawBorder(context: context)
+        drawBorder(context: context)
         
         renderer.drawData(context: context)
         
@@ -382,6 +382,9 @@ open class PieChartView: PieRadarChartViewBase
         }
     }
 
+    /// represents the color used by the border of the pie chart
+    ///
+    /// **default**: `NSUIColor.black`
     @objc open var borderColor: NSUIColor? {
         get
         {
@@ -393,6 +396,9 @@ open class PieChartView: PieRadarChartViewBase
         }
     }
 
+    /// represents the distance from the inner and outer radius of the pie chart
+    ///
+    /// **default**: `6.0`
     @objc open var borderWidth: CGFloat {
         get
         {
@@ -402,6 +408,52 @@ open class PieChartView: PieRadarChartViewBase
         {
             _borderWidth = newValue
             setNeedsDisplay()
+        }
+    }
+
+    /// draws the border for the pie chart
+    private func drawBorder(context: CGContext) {
+        // As long as the chart has the border drawing, and the hole
+        // drawing enabled with a clear color, we draw the border.
+        if self.drawBorderEnabled && self.drawHoleEnabled && self.holeColor == .clear
+        {
+            context.saveGState()
+
+            let holeRadius = self.radius * self.holeRadiusPercent
+            let borderColor = self.borderColor
+            let center = self.centerCircleBox
+
+            var borderWidth = self.borderWidth
+            if borderWidth > center.x - self.radius ||
+                borderWidth < holeRadius - center.x {
+                // if the value set for the border width is greater than
+                // the difference between our chart's radius and the center
+                // of the chart (i.e. the outermost edge of the View containing
+                // the entire chart) or less than the difference between the
+                // the hole radius and the chart's center x position, then we
+                // set the border width equal to that difference (i.e. the max
+                // border width size) to prevent our border from being clipped.
+                borderWidth = center.x - self.radius
+            }
+
+            let borderOuterRadius = self.radius + borderWidth
+            let borderInnerRadius = holeRadius - borderWidth
+
+            context.setFillColor(borderColor!.cgColor)
+            context.beginPath()
+            context.addEllipse(in: CGRect(
+                x: center.x - borderOuterRadius,
+                y: center.y - borderOuterRadius,
+                width: borderOuterRadius * 2.0,
+                height: borderOuterRadius * 2.0))
+            context.addEllipse(in: CGRect(
+                x: center.x - borderInnerRadius,
+                y: center.y - borderInnerRadius,
+                width: borderInnerRadius * 2.0,
+                height: borderInnerRadius * 2.0))
+            context.fillPath(using: .evenOdd)
+
+            context.restoreGState()
         }
     }
     

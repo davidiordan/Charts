@@ -109,53 +109,6 @@ open class PieChartRenderer: NSObject, DataRenderer
         return sliceSpace
     }
 
-    @objc open func drawBorder(context: CGContext) {
-        guard let chart = chart else { return }
-
-        // As long as the chart has the border drawing, and the hole
-        // drawing enabled with a clear color, we draw the border.
-        if chart.drawBorderEnabled && chart.drawHoleEnabled && chart.holeColor == .clear
-        {
-            context.saveGState()
-
-            let holeRadius = chart.radius * chart.holeRadiusPercent
-            let borderColor = chart.borderColor
-            let center = chart.centerCircleBox
-
-            var borderWidth = chart.borderWidth
-            if borderWidth > center.x - chart.radius ||
-                borderWidth < holeRadius - center.x {
-                // if the value set for the border width is greater than
-                // the difference between our chart's radius and the center
-                // of the chart (i.e. the outermost edge of the View containing
-                // the entire chart) or less than the difference between the
-                // the hole radius and the chart's center x position, then we
-                // set the border width equal to that difference (i.e. the max
-                // border width size) to prevent our border from being clipped.
-                borderWidth = chart.centerCircleBox.x - chart.radius
-            }
-
-            let borderOuterRadius = chart.radius + borderWidth
-            let borderInnerRadius = holeRadius - borderWidth
-
-            context.setFillColor(borderColor!.cgColor)
-            context.beginPath()
-            context.addEllipse(in: CGRect(
-                x: center.x - borderOuterRadius,
-                y: center.y - borderOuterRadius,
-                width: borderOuterRadius * 2.0,
-                height: borderOuterRadius * 2.0))
-            context.addEllipse(in: CGRect(
-                x: center.x - borderInnerRadius,
-                y: center.y - borderInnerRadius,
-                width: borderInnerRadius * 2.0,
-                height: borderInnerRadius * 2.0))
-            context.fillPath(using: .evenOdd)
-
-            context.restoreGState()
-        }
-    }
-
     @objc open func drawDataSet(context: CGContext, dataSet: PieChartDataSetProtocol)
     {
         guard let chart = chart else {return }
