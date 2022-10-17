@@ -323,8 +323,14 @@ open class PieChartRenderer: NSObject, DataRenderer
 
         let yValueSum = (data as! PieChartData).yValueSum
 
+        // the below variable is what's used to actually draw the labels
+        // so the idea here would be to use whatever function is called to
+        // draw the labels and then modify it to draw a path from the slice
+        // outwards and then the label.. this is stupid if I'm being honest
         let drawEntryLabels = chart.isDrawEntryLabelsEnabled
         let usePercentValuesEnabled = chart.usePercentValuesEnabled
+        // the below variable is what determines whether or not the entry
+        // label is drawn and at what position in the slice
         let sliceTextDrawingThreshold = chart.sliceTextDrawingThreshold
 
         var angle: CGFloat = 0.0
@@ -522,17 +528,31 @@ open class PieChartRenderer: NSObject, DataRenderer
 
                     if drawXInside && drawYInside
                     {
+                        // draws up/down
+                        context.setLineWidth(2.0)
+                        context.setStrokeColor(UIColor.black.cgColor)
+                        context.move(to: CGPoint(x: x, y: y))
+                        let newY = center.y > y ? y - 30 : y + 30
+                        context.addLine(to: CGPoint(x: x, y: newY))
+                        context.strokePath()
+
+                        // draws right/left
+                        context.move(to: CGPoint(x: center.x > x ? x + 1 : x - 1, y: newY))
+                        let newX = center.x > x ? x - 50 : x + 50
+                        context.addLine(to: CGPoint(x: newX, y: newY))
+                        context.strokePath()
+
                         context.drawText(valueText,
-                                         at: CGPoint(x: x, y: y),
-                                         align: .center,
+                                         at: CGPoint(x: newX, y: newY - lineHeight),
+                                         align: center.x > x ? .right : .left,
                                          angleRadians: angleRadians,
                                          attributes: [.font: valueFont, .foregroundColor: valueTextColor])
                         
                         if j < data.entryCount && pe?.label != nil
                         {
                             context.drawText(pe!.label!,
-                                             at: CGPoint(x: x, y: y + lineHeight),
-                                             align: .center,
+                                             at: CGPoint(x: newX, y: newY),
+                                             align: center.x > x ? .right : .left,
                                              angleRadians: angleRadians,
                                              attributes: [.font: entryLabelFont ?? valueFont,
                                                           .foregroundColor: entryLabelColor ?? valueTextColor])
